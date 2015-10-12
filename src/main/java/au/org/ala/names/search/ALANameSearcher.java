@@ -30,11 +30,9 @@ import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
 import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.util.Version;
 import org.gbif.ecat.model.ParsedName;
 import org.gbif.ecat.parser.UnparsableException;
 import org.gbif.ecat.voc.NameType;
-import org.gbif.ecat.voc.Rank;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -43,7 +41,6 @@ import java.io.OutputStreamWriter;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -102,7 +99,7 @@ public class ALANameSearcher {
         queryParser = new ThreadLocal<QueryParser>() {
             @Override
             protected QueryParser initialValue() {
-                QueryParser qp = new QueryParser(Version.LUCENE_34, "genus", new LowerCaseKeywordAnalyzer());
+                QueryParser qp = new QueryParser("genus", new LowerCaseKeywordAnalyzer());
                 qp.setFuzzyMinSim(0.8f); //fuzzy match similarity setting. used to match the authorship.
                 return qp;
             }
@@ -110,20 +107,20 @@ public class ALANameSearcher {
         idParser = new ThreadLocal<QueryParser>() {
             @Override
             protected QueryParser initialValue() {
-                return new QueryParser(Version.LUCENE_34, "lsid", new org.apache.lucene.analysis.core.KeywordAnalyzer());
+                return new QueryParser("lsid", new org.apache.lucene.analysis.core.KeywordAnalyzer());
             }
         };
 
-        cbReader = DirectoryReader.open(FSDirectory.open(createIfNotExist(indexDirectory + File.separator + "cb")));//false
+        cbReader = DirectoryReader.open(FSDirectory.open(createIfNotExist(indexDirectory + File.separator + "cb").toPath()));//false
         cbSearcher = new IndexSearcher(cbReader);
         //Initialise the IRMNG index searching items
-        irmngReader = DirectoryReader.open(FSDirectory.open(createIfNotExist(indexDirectory + File.separator + "irmng")));
+        irmngReader = DirectoryReader.open(FSDirectory.open(createIfNotExist(indexDirectory + File.separator + "irmng").toPath()));
         irmngSearcher = new IndexSearcher(irmngReader);
         //initialise the Common name index searching items
-        vernReader = DirectoryReader.open(FSDirectory.open(createIfNotExist(indexDirectory + File.separator + "vernacular")));
+        vernReader = DirectoryReader.open(FSDirectory.open(createIfNotExist(indexDirectory + File.separator + "vernacular").toPath()));
         vernSearcher = new IndexSearcher(vernReader);
         //initialise the identifier index
-        idSearcher = new IndexSearcher(DirectoryReader.open(FSDirectory.open(createIfNotExist(indexDirectory + File.separator + "id"))));
+        idSearcher = new IndexSearcher(DirectoryReader.open(FSDirectory.open(createIfNotExist(indexDirectory + File.separator + "id").toPath())));
         tnse = new TaxonNameSoundEx();
         parser = new PhraseNameParser();
         crossRankHomonyms = au.org.ala.names.util.FileUtils.streamToSet(
@@ -135,9 +132,9 @@ public class ALANameSearcher {
         File idxFile = new File(indexDirectory);
         if (!idxFile.exists()) {
             FileUtils.forceMkdir(idxFile);
-            Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_34);
-            IndexWriterConfig conf = new IndexWriterConfig(Version.LUCENE_34, analyzer);
-            IndexWriter iw = new IndexWriter(FSDirectory.open(idxFile), conf);
+            Analyzer analyzer = new StandardAnalyzer();
+            IndexWriterConfig conf = new IndexWriterConfig(analyzer);
+            IndexWriter iw = new IndexWriter(FSDirectory.open(idxFile.toPath()), conf);
             iw.commit();
             iw.close();
         }
@@ -1429,14 +1426,14 @@ public class ALANameSearcher {
                 cl = new LinnaeanRankClassification(null, null);
                 String synName = results.get(0).getRankClassification().getScientificName();
                 try{
-                ParsedName pn = parser.parse(synName);
-                if (pn.isBinomial()) {
-                    cl.setSpecies(pn.canonicalName());
-                    rank = RankType.SPECIES;
-                } else {
-                    cl.setGenus(pn.genusOrAbove);
-                    rank = RankType.GENUS;
-                }
+                    ParsedName pn = parser.parse(synName);
+                    if (pn.isBinomial()) {
+                        cl.setSpecies(pn.canonicalName());
+                        rank = RankType.SPECIES;
+                    } else {
+                        cl.setGenus(pn.genusOrAbove);
+                        rank = RankType.GENUS;
+                    }
                 } catch(Exception e){
                     //don't do anything
                 }

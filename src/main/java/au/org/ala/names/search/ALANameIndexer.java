@@ -35,7 +35,6 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.util.Version;
 import org.gbif.dwc.record.DarwinCoreRecord;
 import org.gbif.dwc.text.Archive;
 import org.gbif.dwc.text.ArchiveFactory;
@@ -250,7 +249,7 @@ public class ALANameIndexer {
         iw.forceMerge(1);
         iw.close();
         //As of lucene 4.0 all IndexReaders are read only
-        return new IndexSearcher(DirectoryReader.open(FSDirectory.open(new File("/data/tmp/guid"))));
+        return new IndexSearcher(DirectoryReader.open(FSDirectory.open(new File("/data/tmp/guid").toPath())));
     }
 
     /**
@@ -263,7 +262,7 @@ public class ALANameIndexer {
      * @throws Exception
      */
     protected IndexWriter createIndexWriter(File directory, Analyzer analyzer, boolean replace) throws Exception {
-        IndexWriterConfig conf = new IndexWriterConfig(Version.LUCENE_34, analyzer);
+        IndexWriterConfig conf = new IndexWriterConfig(analyzer);
         if (replace)
             conf.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
         else
@@ -273,7 +272,7 @@ public class ALANameIndexer {
             FileUtils.forceDelete(directory);
         }
         FileUtils.forceMkdir(directory);
-        IndexWriter iw = new IndexWriter(FSDirectory.open(directory), conf);
+        IndexWriter iw = new IndexWriter(FSDirectory.open(directory.toPath()), conf);
         return iw;
     }
 
@@ -538,8 +537,8 @@ public class ALANameIndexer {
     private void indexCommonNames(IndexWriter iw, String exportDir, String indexDir) throws Exception {
         log.info("Creating Common Names Index ...");
 
-        IndexSearcher currentNameSearcher = new IndexSearcher(DirectoryReader.open(FSDirectory.open(new File(indexDir + File.separator + "cb"))));
-        IndexSearcher extraSearcher = new IndexSearcher(DirectoryReader.open(FSDirectory.open(new File(indexDir + File.separator + "id"))));
+        IndexSearcher currentNameSearcher = new IndexSearcher(DirectoryReader.open(FSDirectory.open(new File(indexDir + File.separator + "cb").toPath())));
+        IndexSearcher extraSearcher = new IndexSearcher(DirectoryReader.open(FSDirectory.open(new File(indexDir + File.separator + "id").toPath())));
 
         addCoLCommonNames(iw, currentNameSearcher);
         addAnbgCommonNames(afdFile, iw, currentNameSearcher, extraSearcher, '\t');
@@ -653,7 +652,7 @@ public class ALANameIndexer {
         iw.commit();
         iw.forceMerge(1);
         iw.close();
-        idSearcher = new IndexSearcher(DirectoryReader.open(FSDirectory.open(indexDir)));
+        idSearcher = new IndexSearcher(DirectoryReader.open(FSDirectory.open(indexDir.toPath())));
     }
 
     /**
@@ -683,7 +682,7 @@ public class ALANameIndexer {
         iw.commit();
         iw.forceMerge(1);
         iw.close();
-        return new IndexSearcher(DirectoryReader.open(FSDirectory.open(indexDir)));
+        return new IndexSearcher(DirectoryReader.open(FSDirectory.open(indexDir.toPath())));
     }
 
     /**

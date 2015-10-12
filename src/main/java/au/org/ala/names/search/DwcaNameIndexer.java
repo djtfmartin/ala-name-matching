@@ -251,12 +251,12 @@ public class DwcaNameIndexer extends ALANameIndexer {
         iw.commit();
         iw.forceMerge(1);
         iw.close();
-        lsearcher =new IndexSearcher(DirectoryReader.open(FSDirectory.open(indexDir)));
+        lsearcher =new IndexSearcher(DirectoryReader.open(FSDirectory.open(indexDir.toPath())));
     }
 
     private TopDocs getLoadIdxResults(String field, String value,int max) throws Exception {
         if(lsearcher == null && new File(dirTmpIndex).exists()) {
-            lsearcher = new IndexSearcher(DirectoryReader.open(FSDirectory.open(new File(dirTmpIndex))));
+            lsearcher = new IndexSearcher(DirectoryReader.open(FSDirectory.open(new File(dirTmpIndex).toPath())));
         } else if(lsearcher == null && !new File(dirTmpIndex).exists()){
             throw new RuntimeException("A load index has not been generated. Please run this tool with '-load' before creating the search index.");
         }
