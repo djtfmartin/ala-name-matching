@@ -102,7 +102,7 @@ public class PhraseNameParser extends NameParser {
             pn = future.get(2, TimeUnit.SECONDS);
 
         } catch (Exception ie){
-            System.out.println("Problem parsing name: " + scientificName + " - done - " + ie.getMessage());
+            log.warn("Problem parsing name: " + scientificName + " - done - " + ie.getMessage());
             throw new UnparsableException(null, "Unable to parse " + scientificName + ". Skipping.......");
         } finally {
             if(executor != null){
