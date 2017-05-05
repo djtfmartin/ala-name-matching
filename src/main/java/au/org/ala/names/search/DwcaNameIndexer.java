@@ -951,6 +951,10 @@ public class DwcaNameIndexer extends ALANameIndexer {
                             for (Map.Entry<String, String> entry : props.entrySet()) {
                                 System.out.println(entry.getKey() + ": " + entry.getValue());
                             }
+                            if(nsr.getLsid() != null){
+                                String commonName = searcher.getCommonNameForLSID(nsr.getLsid());
+                                System.out.println("Common name: " + commonName);
+                            }
                         } else {
                             System.err.println("No match for " + line.getOptionValue("testSearch"));
                         }
